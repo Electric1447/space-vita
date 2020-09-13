@@ -5,7 +5,7 @@
 #include <SDL2/SDL.h>
 #include <psp2/ctrl.h>
 
-#define MAX_ENEMIES 0
+#define MAX_ENEMIES 60
 
 int program_start();
 
