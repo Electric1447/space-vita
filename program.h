@@ -3,8 +3,9 @@
 
 // libtransistor and sdl2
 #include <SDL2/SDL.h>
+#include <psp2/ctrl.h>
 
-#define MAX_ENEMIES 60
+#define MAX_ENEMIES 0
 
 int program_start();
 
@@ -38,10 +39,6 @@ struct Pixel {
 	int b;
 };
 
-static unsigned char title[100][200];
-static unsigned char rotated_ship[36][36];
-static unsigned char orig_ship[36][36];
-
 //Struct for global variables for pong
 struct SpaceGlobals{
 	//Flag for restarting the entire game.
@@ -52,8 +49,11 @@ struct SpaceGlobals{
 
 	unsigned int seed;
 
+	unsigned char rotated_ship[36][36];
+	unsigned char orig_ship[36][36];
 	const unsigned char (*curPalette)[3];
 	unsigned char enemy[23][23];
+	unsigned char title[100][200];
 
 	int passwordList[100];
 	int playerExplodeFrame;
@@ -69,7 +69,7 @@ struct SpaceGlobals{
 	int titleScreenRefresh;
 
 	//Game engine globals
-	int button;
+	uint32_t button;
 	float lstick_x, lstick_y, rstick_x, rstick_y;
 
 	// only 20 bullets can be onscreen at a time

@@ -22,9 +22,9 @@ pong example, but also I believe necesary since global variables don't seem to b
 **/
 
 #define xMinBoundry 0
-#define xMaxBoundry 427
+#define xMaxBoundry 480
 #define yMinBoundry 0
-#define yMaxBoundry 240
+#define yMaxBoundry 272
 
 void blackout(struct Graphics* g)
 {
@@ -112,10 +112,14 @@ void p1Move(struct SpaceGlobals *mySpaceGlobals) {
 
 	// Handle D-pad movements as well
 	// max out speed at 1 or -1 in both directions
-	xdif = (xdif >  1 || mySpaceGlobals->button & PAD_BUTTON_RIGHT)?  1 : xdif;
+	/*xdif = (xdif >  1 || mySpaceGlobals->button & PAD_BUTTON_RIGHT)?  1 : xdif;
 	xdif = (xdif < -1 || mySpaceGlobals->button &  PAD_BUTTON_LEFT)? -1 : xdif;
 	ydif = (ydif >  1 || mySpaceGlobals->button &	 PAD_BUTTON_UP)?  1 : ydif;
-	ydif = (ydif < -1 || mySpaceGlobals->button &  PAD_BUTTON_DOWN)? -1 : ydif;
+	ydif = (ydif < -1 || mySpaceGlobals->button &  PAD_BUTTON_DOWN)? -1 : ydif;*/
+	xdif = (xdif >  1 || mySpaceGlobals->button & SCE_CTRL_RIGHT)?  1 : xdif;
+	xdif = (xdif < -1 || mySpaceGlobals->button &  SCE_CTRL_LEFT)? -1 : xdif;
+	ydif = (ydif >  1 || mySpaceGlobals->button &    SCE_CTRL_UP)?  1 : ydif;
+	ydif = (ydif < -1 || mySpaceGlobals->button &  SCE_CTRL_DOWN)? -1 : ydif;	
 
 	// don't update angle if both are within -.1 < x < .1
 	// (this is an expenesive check... 128 bytes compared to just ==0)
@@ -145,7 +149,8 @@ void p1Move(struct SpaceGlobals *mySpaceGlobals) {
 
 void checkPause(struct SpaceGlobals * mySpaceGlobals)
 {
-	if (mySpaceGlobals->button & PAD_BUTTON_PLUS)
+	//if (mySpaceGlobals->button & PAD_BUTTON_PLUS)
+	if (mySpaceGlobals->button & SCE_CTRL_START)
 	{
 		// switch to the pause state and mark view as invalid
 		mySpaceGlobals->state = 3;
@@ -271,7 +276,7 @@ void handleExplosions(struct SpaceGlobals* mySpaceGlobals)
 
 	if (mySpaceGlobals->playerExplodeFrame > 1)
 	{
-		makeScaleMatrix(mySpaceGlobals->playerExplodeFrame, 36, orig_ship, rotated_ship, mySpaceGlobals->transIndex);
+		makeScaleMatrix(mySpaceGlobals->playerExplodeFrame, 36, mySpaceGlobals->orig_ship, mySpaceGlobals->rotated_ship, mySpaceGlobals->transIndex);
 		mySpaceGlobals->playerExplodeFrame ++;
 		mySpaceGlobals->invalid = 1;
 
@@ -517,9 +522,9 @@ void renderShip(struct SpaceGlobals *mySpaceGlobals)
 	const int posy = (int)mySpaceGlobals->p1Y;
 
 	if (mySpaceGlobals->playerExplodeFrame < 2)
-		makeRotationMatrix(mySpaceGlobals->angle, 36, orig_ship, rotated_ship, mySpaceGlobals->transIndex);
+		makeRotationMatrix(mySpaceGlobals->angle, 36, mySpaceGlobals->orig_ship, mySpaceGlobals->rotated_ship, mySpaceGlobals->transIndex);
 
-	drawBitmap(mySpaceGlobals->graphics, posx, posy, 36, 36, rotated_ship, mySpaceGlobals->curPalette);
+	drawBitmap(mySpaceGlobals->graphics, posx, posy, 36, 36, mySpaceGlobals->rotated_ship, mySpaceGlobals->curPalette);
 
 }
 
@@ -590,7 +595,7 @@ void displayTitle(struct SpaceGlobals * mySpaceGlobals)
 		printf("Drawing \"text\"\n");
 
 		// display the bitmap in upper center screen
-		drawBitmap(mySpaceGlobals->graphics, 107, 30, 200, 100, title, title_palette);
+		drawBitmap(mySpaceGlobals->graphics, 160, 31, 200, 100, mySpaceGlobals->title, title_palette);
 
 		char credits[255];
 		snprintf(credits, 255, "by vgmoose");
@@ -600,6 +605,8 @@ void displayTitle(struct SpaceGlobals * mySpaceGlobals)
 
 		char license[255];
 		snprintf(license, 255, "MIT License");
+		char port[255];
+		snprintf(port, 255, "Vita port by Electric1447");
 
 		char play[255];
 		snprintf(play, 255, "Start Game");
@@ -607,12 +614,13 @@ void displayTitle(struct SpaceGlobals * mySpaceGlobals)
 		snprintf(password, 255, "Password");
 
 		//display the menu under it
-		drawString(mySpaceGlobals->graphics, 37, 10, credits);
-		drawString(mySpaceGlobals->graphics, 25, 13, play);
-		drawString(mySpaceGlobals->graphics, 26, 14, password);
+		drawString(mySpaceGlobals->graphics, 40, 11, credits);
+		drawString(mySpaceGlobals->graphics, 28, 14, play);
+		drawString(mySpaceGlobals->graphics, 29, 15, password);
 
 //		drawString(mySpaceGlobals->graphics, 45, 17, musiccredits);
-		drawString(mySpaceGlobals->graphics, 0, 17, license);
+		drawString(mySpaceGlobals->graphics, 0, 19, license);
+		drawString(mySpaceGlobals->graphics, 0, 20, port);
 
 		drawMenuCursor(mySpaceGlobals);
 
@@ -625,30 +633,33 @@ void displayTitle(struct SpaceGlobals * mySpaceGlobals)
 void drawMenuCursor(struct SpaceGlobals *mySpaceGlobals)
 {
 	// cover up any old cursors (used to be needed before changing to draw everything mode)
-	fillRect(mySpaceGlobals->graphics, 138, 164, 16, 30, 0, 0, 0);
-	fillRect(mySpaceGlobals->graphics, 250, 164, 16, 30, 0, 0, 0);
+	fillRect(mySpaceGlobals->graphics, 150, 168, 16, 30, 0, 0, 0);
+	fillRect(mySpaceGlobals->graphics, 262, 168, 16, 30, 0, 0, 0);
 
 	// display the cursor on the correct item
 	char cursor[255];
 	snprintf(cursor, 255, "[[            ]]");
-	drawString(mySpaceGlobals->graphics, 21, 13 + mySpaceGlobals->menuChoice, cursor);
+	drawString(mySpaceGlobals->graphics, 24, 14 + mySpaceGlobals->menuChoice, cursor);
 }
 
 void doMenuAction(struct SpaceGlobals *mySpaceGlobals)
 {
 	// if we've seen the A button and B button not being pressed
-	if (!(mySpaceGlobals->button & PAD_BUTTON_A) && !(mySpaceGlobals->button & PAD_BUTTON_B))
+	//if (!(mySpaceGlobals->button & PAD_BUTTON_A) && !(mySpaceGlobals->button & PAD_BUTTON_B))
+	if (!(mySpaceGlobals->button & SCE_CTRL_CIRCLE) && !(mySpaceGlobals->button & SCE_CTRL_CROSS))
 	{
 		mySpaceGlobals->allowInput = 1;
 	}
 
 	// title screen and B was pressed, exit fully
-	if (mySpaceGlobals->state == 1 && mySpaceGlobals->button & PAD_BUTTON_B && mySpaceGlobals->allowInput)
+	//if (mySpaceGlobals->state == 1 && mySpaceGlobals->button & PAD_BUTTON_B && mySpaceGlobals->allowInput)
+	if (mySpaceGlobals->state == 1 && mySpaceGlobals->button & SCE_CTRL_CROSS && mySpaceGlobals->allowInput)
 	{
 		mySpaceGlobals->quit = 1;
 	}
 
-	if (mySpaceGlobals->button & PAD_BUTTON_A && mySpaceGlobals->allowInput)
+	//if (mySpaceGlobals->button & PAD_BUTTON_A && mySpaceGlobals->allowInput)
+	if (mySpaceGlobals->button & SCE_CTRL_CIRCLE && mySpaceGlobals->allowInput)
 	{
 		// if we're on the title menu
 		if (mySpaceGlobals->state == 1)
@@ -720,13 +731,15 @@ void doMenuAction(struct SpaceGlobals *mySpaceGlobals)
 
 	float stickY = mySpaceGlobals->lstick_y + mySpaceGlobals->rstick_y;
 
-	if (mySpaceGlobals->button & PAD_BUTTON_DOWN || stickY < -0.3)
+	//if (mySpaceGlobals->button & PAD_BUTTON_DOWN || stickY < -0.3)
+	if (mySpaceGlobals->button & SCE_CTRL_DOWN || stickY < -0.3)
 	{
 		mySpaceGlobals->menuChoice = 1;
 		mySpaceGlobals->invalid = 1;
 	}
 
-	if (mySpaceGlobals->button & PAD_BUTTON_UP || stickY > 0.3)
+	//if (mySpaceGlobals->button & PAD_BUTTON_UP || stickY > 0.3)
+	if (mySpaceGlobals->button & SCE_CTRL_UP || stickY > 0.3)
 	{
 		mySpaceGlobals->menuChoice = 0;
 		mySpaceGlobals->invalid = 1;
@@ -758,18 +771,24 @@ void displayPause(struct SpaceGlobals * mySpaceGlobals)
 void doPasswordMenuAction(struct SpaceGlobals * mySpaceGlobals)
 {
 	// if we've seen up, down, left, right, and a buttons not being pressed
-	if (!(mySpaceGlobals->button & PAD_BUTTON_A	 ||
+	/*if (!(mySpaceGlobals->button & PAD_BUTTON_A	 ||
 		  mySpaceGlobals->button & PAD_BUTTON_UP	||
 		  mySpaceGlobals->button & PAD_BUTTON_DOWN  ||
 		  mySpaceGlobals->button & PAD_BUTTON_LEFT  ||
-		  mySpaceGlobals->button & PAD_BUTTON_RIGHT   ))
+		  mySpaceGlobals->button & PAD_BUTTON_RIGHT   ))*/
+	if (!(mySpaceGlobals->button & SCE_CTRL_CIRCLE ||
+		  mySpaceGlobals->button & SCE_CTRL_UP     ||
+		  mySpaceGlobals->button & SCE_CTRL_DOWN   ||
+		  mySpaceGlobals->button & SCE_CTRL_LEFT   ||
+		  mySpaceGlobals->button & SCE_CTRL_RIGHT    ))
 	{
 		mySpaceGlobals->allowInput = 1;
 	}
 
 	if (mySpaceGlobals->allowInput)
 	{
-		if (mySpaceGlobals->button & PAD_BUTTON_B)
+		//if (mySpaceGlobals->button & PAD_BUTTON_B)
+		if (mySpaceGlobals->button & SCE_CTRL_CROSS)
 		{
 			// go back to title screen
 			mySpaceGlobals->state = 1;
@@ -783,7 +802,8 @@ void doPasswordMenuAction(struct SpaceGlobals * mySpaceGlobals)
 			// mark view invalid to redraw
 			mySpaceGlobals->invalid = 1;
 		}
-		if (mySpaceGlobals->button & PAD_BUTTON_A)
+		//if (mySpaceGlobals->button & PAD_BUTTON_A)
+		if (mySpaceGlobals->button & SCE_CTRL_CIRCLE)
 		{
 			// try the password
 			tryPassword(mySpaceGlobals);
@@ -800,10 +820,14 @@ void doPasswordMenuAction(struct SpaceGlobals * mySpaceGlobals)
 
 		float stickY = mySpaceGlobals->lstick_y + mySpaceGlobals->rstick_y;
 		float stickX = mySpaceGlobals->lstick_x + mySpaceGlobals->rstick_x;
-		int down  = (mySpaceGlobals->button & PAD_BUTTON_DOWN  || stickY < -0.3);
+		/*int down  = (mySpaceGlobals->button & PAD_BUTTON_DOWN  || stickY < -0.3);
 		int up	= (mySpaceGlobals->button & PAD_BUTTON_UP	|| stickY >  0.3);
 		int left  = (mySpaceGlobals->button & PAD_BUTTON_LEFT  || stickX < -0.3);
-		int right = (mySpaceGlobals->button & PAD_BUTTON_RIGHT || stickX >  0.3);
+		int right = (mySpaceGlobals->button & PAD_BUTTON_RIGHT || stickX >  0.3);*/
+		int down  = (mySpaceGlobals->button & SCE_CTRL_DOWN  || stickY < -0.3);
+		int up	  = (mySpaceGlobals->button & SCE_CTRL_UP	 || stickY >  0.3);
+		int left  = (mySpaceGlobals->button & SCE_CTRL_LEFT  || stickX < -0.3);
+		int right = (mySpaceGlobals->button & SCE_CTRL_RIGHT || stickX >  0.3);
 
 		if (up || down)
 		{
@@ -1046,7 +1070,7 @@ void tryPassword(struct SpaceGlobals *mySpaceGlobals)
 	if (mySpaceGlobals->passwordEntered == 00000 && mySpaceGlobals->playerChoice != 0)
 	{
 		mySpaceGlobals->playerChoice = 0;
-		decompress_sprite(511, 36, 36, compressed_ship, orig_ship, 14);
+		decompress_sprite(511, 36, 36, compressed_ship, mySpaceGlobals->orig_ship, 14);
 		mySpaceGlobals->curPalette = ship_palette;
 		mySpaceGlobals->transIndex = 14;
 		mySpaceGlobals->state = 7;
@@ -1056,7 +1080,7 @@ void tryPassword(struct SpaceGlobals *mySpaceGlobals)
 	if (mySpaceGlobals->passwordEntered == 12345)
 	{
 		mySpaceGlobals->playerChoice = 3;
-		decompress_sprite(452, 36, 36, compressed_ship2, orig_ship, 5);
+		decompress_sprite(452, 36, 36, compressed_ship2, mySpaceGlobals->orig_ship, 5);
 		mySpaceGlobals->curPalette = ship2_palette;
 		mySpaceGlobals->transIndex = 5;
 		mySpaceGlobals->state = 7;
@@ -1066,7 +1090,7 @@ void tryPassword(struct SpaceGlobals *mySpaceGlobals)
 	if (mySpaceGlobals->passwordEntered == 24177)
 	{
 		mySpaceGlobals->playerChoice = 1;
-		decompress_sprite(662, 36, 36, compressed_boss2, orig_ship, 39);
+		decompress_sprite(662, 36, 36, compressed_boss2, mySpaceGlobals->orig_ship, 39);
 		mySpaceGlobals->curPalette = boss2_palette;
 		mySpaceGlobals->transIndex = 39;
 		mySpaceGlobals->state = 7;
@@ -1076,7 +1100,7 @@ void tryPassword(struct SpaceGlobals *mySpaceGlobals)
 	if (mySpaceGlobals->passwordEntered == 37124)
 	{
 		mySpaceGlobals->playerChoice = 2;
-		decompress_sprite(740, 36, 36, compressed_boss, orig_ship, 39);
+		decompress_sprite(740, 36, 36, compressed_boss, mySpaceGlobals->orig_ship, 39);
 		mySpaceGlobals->curPalette = boss_palette;
 		mySpaceGlobals->transIndex = 39;
 		mySpaceGlobals->state = 7;

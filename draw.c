@@ -3,8 +3,8 @@
 #include "program.h"
 #include "font.h"
 
-#define SCREEN_X 1280
-#define s 720
+#define SCREEN_X 960
+#define s 544
 
 void flipBuffers(struct Graphics* g)
 {
@@ -31,10 +31,14 @@ void putAPixel(struct Graphics* gr, int x, int y, int b, int g, int r)
 	y *= 2;
 
 	SDL_Rect rect;
-	rect.x = x*1.5;
+	/*rect.x = x*1.5;
 	rect.y = y*1.5;
 	rect.w = 3;
-	rect.h = 3;
+	rect.h = 3;*/
+	rect.x = x;
+	rect.y = y;
+	rect.w = 2;
+	rect.h = 2;
 
 	SDL_FillRect(gr->window_surface, &rect, SDL_MapRGBA(gr->window_surface->format, b, g, r, 0xFF));
 }

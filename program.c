@@ -15,7 +15,7 @@ void init(struct Graphics* g)
 	}
 	printf("initialized SDL\n");
 
-	g->window = SDL_CreateWindow("n/a", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1280, 720, SDL_WINDOW_SHOWN);
+	g->window = SDL_CreateWindow("n/a", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 960, 544, SDL_WINDOW_SHOWN);
 	if(g->window == NULL) {
 		printf("window could not be created: %s\n", SDL_GetError());
 		return;
@@ -32,7 +32,7 @@ void init(struct Graphics* g)
 				SDL_Quit();
 				return;
 		}
-}
+	}
 
 }
 
@@ -85,8 +85,8 @@ int program_start()
 	struct PADData pad_data;
 
 	// decompress compressed things into their arrays, final argument is the transparent color in their palette
-	decompress_sprite(3061, 200, 100, compressed_title, title, 39);
-	decompress_sprite(511, 36, 36, compressed_ship, orig_ship, 14);
+	decompress_sprite(3061, 200, 100, compressed_title, mySpaceGlobals.title, 39);
+	decompress_sprite(511, 36, 36, compressed_ship, mySpaceGlobals.orig_ship, 14);
 	decompress_sprite(206, 23, 23, compressed_enemy, mySpaceGlobals.enemy, 9);
 
 	// setup palette and transparent index
@@ -111,14 +111,18 @@ int program_start()
 		SDL_Delay(16);
 
 		PADRead(&pad_data);
+		SceCtrlData pad;
+		sceCtrlPeekBufferPositive(0, &pad, 1);
 
 		//Get the status of the controller
-		mySpaceGlobals.button = pad_data.btns_h;
+		//mySpaceGlobals.button = pad_data.btns_h;
+		mySpaceGlobals.button = pad.buttons;
 
 		mySpaceGlobals.rstick_x = pad_data.rstick_x;
 		mySpaceGlobals.lstick_x = pad_data.lstick_x;
 		mySpaceGlobals.rstick_y = pad_data.rstick_y;
 		mySpaceGlobals.lstick_y = pad_data.lstick_y;
+		
 
 		mySpaceGlobals.touched = pad_data.touched;
 
@@ -186,7 +190,8 @@ int program_start()
 			checkPause(&mySpaceGlobals);
 		}
 		//To exit the game
-		if (mySpaceGlobals.button & PAD_BUTTON_MINUS)
+		//if (mySpaceGlobals.button & PAD_BUTTON_MINUS)
+		if (mySpaceGlobals.button & SCE_CTRL_SELECT)
 		{
 			break;
 		}

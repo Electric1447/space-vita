@@ -52,8 +52,8 @@ void PADRead(struct PADData* data)
 		if (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERMOTION)
 		{
 			data->touched = 1;
-			data->touched_y = event.tfinger.y * 720;
-			data->touched_x = event.tfinger.x * 1280;
+			data->touched_y = event.tfinger.y * 544;
+			data->touched_x = event.tfinger.x * 960;
 		}
 
 		if (event.type == SDL_FINGERUP)
